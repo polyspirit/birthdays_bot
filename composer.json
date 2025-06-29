@@ -1,0 +1,10 @@
+{
+    "require": {
+        "irazasyed/telegram-bot-sdk": "^3.15"
+    },
+    "autoload": {
+        "psr-4": {
+            "Classes\\": "Classes/"
+        }
+    }
+}
