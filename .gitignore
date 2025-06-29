@@ -1,2 +1,22 @@
-/.vscode
-/vendor
+# Environment configuration
+.env
+
+# Composer
+/vendor/
+composer.phar
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Cache
+*.cache

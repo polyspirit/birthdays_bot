@@ -10,7 +10,12 @@ class UserStateManager
 
     public function __construct()
     {
-        $this->pdo = new PDOConnection('mysql:host=localhost;dbname=birthday_bot', 'db_user', 'db_pass');
+        $host = Config::getDatabaseHost();
+        $dbname = Config::getDatabaseName();
+        $user = Config::getDatabaseUser();
+        $pass = Config::getDatabasePass();
+
+        $this->pdo = new PDOConnection("mysql:host={$host};dbname={$dbname}", $user, $pass);
     }
 
     public function setState(int $userId, string $state): void

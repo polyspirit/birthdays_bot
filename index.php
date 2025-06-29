@@ -3,6 +3,7 @@
 require 'vendor/autoload.php';
 
 use Classes\{
+    Config,
     Database,
     TelegramBot,
     UserStateManager,
@@ -13,12 +14,12 @@ use Classes\{
     Notification
 };
 
-// Configuration
-const BOT_TOKEN = '7575800715:AAFdIdu0w1C0q57Kw3VCrTyy-AkW4pHVJIo';
+// Load configuration from .env file
+Config::load();
 
 // Initialize services
 $database = new Database();
-$telegramBot = new TelegramBot(BOT_TOKEN);
+$telegramBot = new TelegramBot(Config::getBotToken());
 $stateManager = new UserStateManager();
 $birthdayManager = new BirthdayManager($database, $telegramBot);
 $notificationService = new NotificationService($database, $telegramBot);
