@@ -31,7 +31,7 @@ class Database
         return $stmt->fetchAll(PDOConnection::FETCH_ASSOC);
     }
 
-    public function addBirthday(int $userId, string $name, string $telegramUsername, int $birthdayChatId, string $birthDate): void
+    public function addBirthday(int $userId, string $name, string $telegramUsername, ?int $birthdayChatId, string $birthDate): void
     {
         $stmt = $this->pdo->prepare("INSERT INTO birthdays (user_id, name, telegram_username, birthday_chat_id, birth_date) VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([$userId, $name, $telegramUsername, $birthdayChatId, $birthDate]);

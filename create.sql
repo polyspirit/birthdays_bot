@@ -21,6 +21,6 @@ CREATE TABLE birthdays (
   user_id BIGINT,
   name VARCHAR(255),
   telegram_username VARCHAR(255),
-  birthday_chat_id BIGINT,
+  birthday_chat_id BIGINT NULL,
   birth_date DATE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

@@ -59,33 +59,19 @@ class WebhookHandler
 
         if ($state && $state['state'] === 'awaiting_name') {
             $this->stateManager->updateStateWithTempName($userId, $text, 'awaiting_username');
-            $this->telegramBot->sendMessage($chatId, "Теперь введите Telegram username именинника (без @) или его chat_id:");
+            $this->telegramBot->sendMessage($chatId, "Теперь введите Telegram username именинника (без @):");
             return;
         }
 
         if ($state && $state['state'] === 'awaiting_username') {
             $input = trim($text);
             if (empty($input)) {
-                $this->telegramBot->sendMessage($chatId, "❌ Поле не может быть пустым. Введите Telegram username (без @) или chat_id:");
+                $this->telegramBot->sendMessage($chatId, "❌ Поле не может быть пустым. Введите Telegram username (без @):");
                 return;
             }
 
-            $birthdayChatId = null;
-
-            // Проверяем, является ли ввод числом (chat_id)
-            if (is_numeric($input)) {
-                $birthdayChatId = (int) $input;
-            } else {
-                // Это username, пытаемся получить chat_id
-                $birthdayChatId = $this->telegramBot->getChatIdByUsername($input);
-            }
-
-            if (!$birthdayChatId) {
-                $this->telegramBot->sendMessage($chatId, "❌ Не удалось найти пользователя. Введите корректный Telegram username (без @) или chat_id пользователя:");
-                return;
-            }
-
-            $this->stateManager->updateStateWithTempNameUsernameAndChatId($userId, $state['temp_name'], $input, $birthdayChatId, 'awaiting_date');
+            // Сохраняем username как есть, без проверки chat_id
+            $this->stateManager->updateStateWithTempNameAndUsername($userId, $state['temp_name'], $input, 'awaiting_date');
             $this->telegramBot->sendMessage($chatId, "Теперь введите дату рождения в формате ГГГГ-ММ-ДД:");
             return;
         }
@@ -96,7 +82,7 @@ class WebhookHandler
                 return;
             }
 
-            $this->birthdayManager->addBirthday($userId, $chatId, $state['temp_name'], $state['temp_username'], $state['temp_birthday_chat_id'], $text);
+            $this->birthdayManager->addBirthday($userId, $chatId, $state['temp_name'], $state['temp_username'], null, $text);
             $this->stateManager->clearState($userId);
             return;
         }
@@ -127,7 +113,10 @@ class WebhookHandler
                 $this->telegramBot->sendMessage($birthdayChatId, $greeting);
                 $this->telegramBot->answerCallbackQuery($callback->getId(), '📨 Поздравление отправлено!');
             } else {
-                $this->telegramBot->answerCallbackQuery($callback->getId(), '❌ Не удалось отправить поздравление');
+                // Если chat_id не найден, отправляем в текущий чат с упоминанием
+                $greetingWithMention = "🎉 С днём рождения, [{$name}](https://t.me/{$username})!\nЖелаю счастья, радости и тепла!";
+                $this->telegramBot->sendMessage($chatId, $greetingWithMention, ['parse_mode' => 'Markdown']);
+                $this->telegramBot->answerCallbackQuery($callback->getId(), '📨 Поздравление отправлено в чат!');
             }
         }
     }
