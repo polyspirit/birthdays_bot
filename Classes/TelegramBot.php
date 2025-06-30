@@ -38,9 +38,12 @@ class TelegramBot
     public function getChatIdByUsername(string $username): ?int
     {
         try {
+            // Попробуем получить информацию о чате
             $response = $this->telegram->getChat(['chat_id' => '@' . $username]);
             return $response->getId();
         } catch (\Exception $e) {
+            // Если не удалось получить через getChat, возвращаем null
+            // Пользователь может ввести chat_id вручную
             return null;
         }
     }

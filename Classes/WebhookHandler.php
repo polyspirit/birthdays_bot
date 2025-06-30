@@ -59,25 +59,33 @@ class WebhookHandler
 
         if ($state && $state['state'] === 'awaiting_name') {
             $this->stateManager->updateStateWithTempName($userId, $text, 'awaiting_username');
-            $this->telegramBot->sendMessage($chatId, "Теперь введите Telegram username именинника (без @):");
+            $this->telegramBot->sendMessage($chatId, "Теперь введите Telegram username именинника (без @) или его chat_id:");
             return;
         }
 
         if ($state && $state['state'] === 'awaiting_username') {
-            $username = trim($text);
-            if (empty($username)) {
-                $this->telegramBot->sendMessage($chatId, "❌ Username не может быть пустым. Введите Telegram username:");
+            $input = trim($text);
+            if (empty($input)) {
+                $this->telegramBot->sendMessage($chatId, "❌ Поле не может быть пустым. Введите Telegram username (без @) или chat_id:");
                 return;
             }
 
-            // Получаем chat_id именинника по username
-            $birthdayChatId = $this->telegramBot->getChatIdByUsername($username);
+            $birthdayChatId = null;
+
+            // Проверяем, является ли ввод числом (chat_id)
+            if (is_numeric($input)) {
+                $birthdayChatId = (int) $input;
+            } else {
+                // Это username, пытаемся получить chat_id
+                $birthdayChatId = $this->telegramBot->getChatIdByUsername($input);
+            }
+
             if (!$birthdayChatId) {
-                $this->telegramBot->sendMessage($chatId, "❌ Не удалось найти пользователя с username @{$username}. Проверьте правильность username и попробуйте снова:");
+                $this->telegramBot->sendMessage($chatId, "❌ Не удалось найти пользователя. Введите корректный Telegram username (без @) или chat_id пользователя:");
                 return;
             }
 
-            $this->stateManager->updateStateWithTempNameUsernameAndChatId($userId, $state['temp_name'], $username, $birthdayChatId, 'awaiting_date');
+            $this->stateManager->updateStateWithTempNameUsernameAndChatId($userId, $state['temp_name'], $input, $birthdayChatId, 'awaiting_date');
             $this->telegramBot->sendMessage($chatId, "Теперь введите дату рождения в формате ГГГГ-ММ-ДД:");
             return;
         }
