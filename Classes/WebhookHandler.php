@@ -58,7 +58,18 @@ class WebhookHandler
         $state = $this->stateManager->getState($userId);
 
         if ($state && $state['state'] === 'awaiting_name') {
-            $this->stateManager->updateStateWithTempName($userId, $text, 'awaiting_date');
+            $this->stateManager->updateStateWithTempName($userId, $text, 'awaiting_username');
+            $this->telegramBot->sendMessage($chatId, "Теперь введите Telegram username именинника (без @):");
+            return;
+        }
+
+        if ($state && $state['state'] === 'awaiting_username') {
+            $username = trim($text);
+            if (empty($username)) {
+                $this->telegramBot->sendMessage($chatId, "❌ Username не может быть пустым. Введите Telegram username:");
+                return;
+            }
+            $this->stateManager->updateStateWithTempNameAndUsername($userId, $state['temp_name'], $username, 'awaiting_date');
             $this->telegramBot->sendMessage($chatId, "Теперь введите дату рождения в формате ГГГГ-ММ-ДД:");
             return;
         }
@@ -69,7 +80,7 @@ class WebhookHandler
                 return;
             }
 
-            $this->birthdayManager->addBirthday($userId, $chatId, $state['temp_name'], $text);
+            $this->birthdayManager->addBirthday($userId, $chatId, $state['temp_name'], $state['temp_username'], $text);
             $this->stateManager->clearState($userId);
             return;
         }
@@ -86,6 +97,22 @@ class WebhookHandler
         if (preg_match('/^delete_(\d+)$/', $data, $matches)) {
             $id = (int) $matches[1];
             $this->birthdayManager->deleteBirthday($id, $userId, $chatId, $callback->getId());
+        }
+
+        if (preg_match('/^greet_(.+)_(.+)$/', $data, $m)) {
+            $name = urldecode($m[1]);
+            $username = urldecode($m[2]);
+
+            $greeting = "🎉 С днём рождения, {$name}!\nЖелаю счастья, радости и тепла!";
+
+            // Отправляем поздравление имениннику
+            $birthdayChatId = $this->database->getChatIdByUsername($username);
+            if ($birthdayChatId) {
+                $this->telegramBot->sendMessage($birthdayChatId, $greeting);
+                $this->telegramBot->answerCallbackQuery($callback->getId(), '📨 Поздравление отправлено!');
+            } else {
+                $this->telegramBot->answerCallbackQuery($callback->getId(), '❌ Не удалось отправить поздравление');
+            }
         }
     }
 }

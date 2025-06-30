@@ -13,10 +13,10 @@ class BirthdayManager
         $this->telegramBot = $telegramBot;
     }
 
-    public function addBirthday(int $userId, int $chatId, string $name, string $birthDate): void
+    public function addBirthday(int $userId, int $chatId, string $name, string $telegramUsername, string $birthDate): void
     {
-        $this->database->addBirthday($userId, $name, $birthDate);
-        $this->telegramBot->sendMessage($chatId, "✅ {$name} добавлен(а)!");
+        $this->database->addBirthday($userId, $name, $telegramUsername, $birthDate);
+        $this->telegramBot->sendMessage($chatId, "✅ {$name} (@{$telegramUsername}) добавлен(а)!");
     }
 
     public function listBirthdays(int $userId, int $chatId): void
@@ -32,7 +32,8 @@ class BirthdayManager
         $message = "🎂 Ваши именинники:\n";
 
         foreach ($birthdays as $birthday) {
-            $message .= "{$birthday['name']} — " . date('d.m', strtotime($birthday['birth_date'])) . "\n";
+            $username = $birthday['telegram_username'] ? "@{$birthday['telegram_username']}" : "без username";
+            $message .= "{$birthday['name']} ({$username}) — " . date('d.m', strtotime($birthday['birth_date'])) . "\n";
             $keyboard[] = [[
                 'text' => "❌ Удалить {$birthday['name']}",
                 'callback_data' => "delete_{$birthday['id']}"

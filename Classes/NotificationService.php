@@ -19,7 +19,12 @@ class NotificationService
 
         foreach ($birthdays as $birthday) {
             $text = "🎉 Сегодня день рождения у {$birthday['name']}!\n\nПоздравьте его/её!";
-            $this->telegramBot->sendMessage($birthday['chat_id'], $text);
+            $keyboard = [
+                [
+                    ['text' => '📨 Отправить поздравление', 'callback_data' => "greet_" . urlencode($birthday['name']) . "_" . urlencode($birthday['telegram_username'])]
+                ]
+            ];
+            $this->telegramBot->sendMessage($birthday['chat_id'], $text, ['inline_keyboard' => $keyboard]);
         }
     }
 }

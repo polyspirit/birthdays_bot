@@ -37,6 +37,18 @@ class UserStateManager
         $stmt->execute([$tempName, $newState, $userId]);
     }
 
+    public function updateStateWithTempUsername(int $userId, string $tempUsername, string $newState): void
+    {
+        $stmt = $this->pdo->prepare("UPDATE user_states SET temp_username = ?, state = ? WHERE user_id = ?");
+        $stmt->execute([$tempUsername, $newState, $userId]);
+    }
+
+    public function updateStateWithTempNameAndUsername(int $userId, string $tempName, string $tempUsername, string $newState): void
+    {
+        $stmt = $this->pdo->prepare("UPDATE user_states SET temp_name = ?, temp_username = ?, state = ? WHERE user_id = ?");
+        $stmt->execute([$tempName, $tempUsername, $newState, $userId]);
+    }
+
     public function clearState(int $userId): void
     {
         $stmt = $this->pdo->prepare("DELETE FROM user_states WHERE user_id = ?");
