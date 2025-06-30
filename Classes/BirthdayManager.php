@@ -13,9 +13,9 @@ class BirthdayManager
         $this->telegramBot = $telegramBot;
     }
 
-    public function addBirthday(int $userId, int $chatId, string $name, string $telegramUsername, string $birthDate): void
+    public function addBirthday(int $userId, int $chatId, string $name, string $telegramUsername, int $birthdayChatId, string $birthDate): void
     {
-        $this->database->addBirthday($userId, $name, $telegramUsername, $birthDate);
+        $this->database->addBirthday($userId, $name, $telegramUsername, $birthdayChatId, $birthDate);
         $this->telegramBot->sendMessage($chatId, "✅ {$name} (@{$telegramUsername}) добавлен(а)!");
     }
 

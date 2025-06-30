@@ -34,4 +34,14 @@ class TelegramBot
             'text' => $text
         ]);
     }
+
+    public function getChatIdByUsername(string $username): ?int
+    {
+        try {
+            $response = $this->telegram->getChat(['chat_id' => '@' . $username]);
+            return $response->getId();
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 }

@@ -12,7 +12,8 @@ CREATE TABLE user_states (
   user_id BIGINT PRIMARY KEY,
   state VARCHAR(50),
   temp_name VARCHAR(255),
-  temp_username VARCHAR(255)
+  temp_username VARCHAR(255),
+  temp_birthday_chat_id BIGINT
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE birthdays (
@@ -20,5 +21,6 @@ CREATE TABLE birthdays (
   user_id BIGINT,
   name VARCHAR(255),
   telegram_username VARCHAR(255),
+  birthday_chat_id BIGINT,
   birth_date DATE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

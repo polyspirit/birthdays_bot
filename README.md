@@ -84,7 +84,7 @@ Telegram бот для управления днями рождения с ув�
 3. Дату рождения в формате ГГГГ-ММ-ДД
 
 ### Отправка поздравлений именинникам
-При нажатии кнопки "📨 Отправить поздравление" поздравление автоматически отправляется в чат именинника, а не в чат пользователя, который нажал кнопку.
+При нажатии кнопки "📨 Отправить поздравление" поздравление автоматически отправляется напрямую в чат именинника. Система получает chat_id именинника по его Telegram username при добавлении в базу данных.
 
 ## Установка и настройка
 
@@ -125,6 +125,7 @@ CREATE TABLE birthdays (
     user_id BIGINT NOT NULL,
     name VARCHAR(255) NOT NULL,
     telegram_username VARCHAR(255) NOT NULL,
+    birthday_chat_id BIGINT NOT NULL,
     birth_date DATE NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
@@ -134,6 +135,7 @@ CREATE TABLE user_states (
     state VARCHAR(50) NOT NULL,
     temp_name VARCHAR(255),
     temp_username VARCHAR(255),
+    temp_birthday_chat_id BIGINT,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 ```
@@ -141,11 +143,11 @@ CREATE TABLE user_states (
 ### Обновление существующей базы данных
 Если у вас уже есть база данных, выполните SQL-скрипт `update_database.sql`:
 ```sql
--- Добавить поле telegram_username в таблицу birthdays
-ALTER TABLE birthdays ADD COLUMN telegram_username VARCHAR(255) AFTER name;
+-- Добавить поле birthday_chat_id в таблицу birthdays
+ALTER TABLE birthdays ADD COLUMN birthday_chat_id BIGINT AFTER telegram_username;
 
--- Добавить поле temp_username в таблицу user_states
-ALTER TABLE user_states ADD COLUMN temp_username VARCHAR(255) AFTER temp_name;
+-- Добавить поле temp_birthday_chat_id в таблицу user_states
+ALTER TABLE user_states ADD COLUMN temp_birthday_chat_id BIGINT AFTER temp_username;
 ```
 
 4. Настройте webhook для вашего бота

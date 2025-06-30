@@ -49,6 +49,12 @@ class UserStateManager
         $stmt->execute([$tempName, $tempUsername, $newState, $userId]);
     }
 
+    public function updateStateWithTempNameUsernameAndChatId(int $userId, string $tempName, string $tempUsername, int $tempBirthdayChatId, string $newState): void
+    {
+        $stmt = $this->pdo->prepare("UPDATE user_states SET temp_name = ?, temp_username = ?, temp_birthday_chat_id = ?, state = ? WHERE user_id = ?");
+        $stmt->execute([$tempName, $tempUsername, $tempBirthdayChatId, $newState, $userId]);
+    }
+
     public function clearState(int $userId): void
     {
         $stmt = $this->pdo->prepare("DELETE FROM user_states WHERE user_id = ?");

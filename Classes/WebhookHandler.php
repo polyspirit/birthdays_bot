@@ -69,7 +69,15 @@ class WebhookHandler
                 $this->telegramBot->sendMessage($chatId, "❌ Username не может быть пустым. Введите Telegram username:");
                 return;
             }
-            $this->stateManager->updateStateWithTempNameAndUsername($userId, $state['temp_name'], $username, 'awaiting_date');
+
+            // Получаем chat_id именинника по username
+            $birthdayChatId = $this->telegramBot->getChatIdByUsername($username);
+            if (!$birthdayChatId) {
+                $this->telegramBot->sendMessage($chatId, "❌ Не удалось найти пользователя с username @{$username}. Проверьте правильность username и попробуйте снова:");
+                return;
+            }
+
+            $this->stateManager->updateStateWithTempNameUsernameAndChatId($userId, $state['temp_name'], $username, $birthdayChatId, 'awaiting_date');
             $this->telegramBot->sendMessage($chatId, "Теперь введите дату рождения в формате ГГГГ-ММ-ДД:");
             return;
         }
@@ -80,7 +88,7 @@ class WebhookHandler
                 return;
             }
 
-            $this->birthdayManager->addBirthday($userId, $chatId, $state['temp_name'], $state['temp_username'], $text);
+            $this->birthdayManager->addBirthday($userId, $chatId, $state['temp_name'], $state['temp_username'], $state['temp_birthday_chat_id'], $text);
             $this->stateManager->clearState($userId);
             return;
         }
