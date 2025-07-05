@@ -70,11 +70,30 @@ php artisan migrate
 
 ### 5. Настройка webhook для Telegram бота
 
-Установите webhook URL для вашего бота:
+#### Способ 1: Через команду Artisan (рекомендуется)
 
+```bash
+# Установить webhook
+php artisan telegram:set-webhook https://your-domain.com/telegram/webhook
+
+# Проверить текущий webhook
+php artisan telegram:get-webhook
 ```
-https://your-domain.com/telegram/webhook
+
+#### Способ 2: Через браузер
+
+Откройте в браузере:
 ```
+https://api.telegram.org/bot{YOUR_BOT_TOKEN}/setWebhook?url=https://your-domain.com/telegram/webhook
+```
+
+#### Способ 3: Через curl
+
+```bash
+curl "https://api.telegram.org/bot{YOUR_BOT_TOKEN}/setWebhook?url=https://your-domain.com/telegram/webhook"
+```
+
+**Важно:** Замените `{YOUR_BOT_TOKEN}` на ваш токен бота и `your-domain.com` на ваш реальный домен.
 
 ### 6. Настройка cron для ежедневных уведомлений
 
@@ -116,6 +135,10 @@ php artisan telegram:get-chat-id
 ### Команды Artisan
 
 ```bash
+# Настройка webhook
+php artisan telegram:set-webhook https://your-domain.com/telegram/webhook
+php artisan telegram:get-webhook
+
 # Отправка ежедневных уведомлений
 php artisan birthday:send-notifications
 
