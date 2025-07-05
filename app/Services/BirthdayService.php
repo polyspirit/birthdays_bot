@@ -41,7 +41,11 @@ class BirthdayService
 
         foreach ($birthdays as $birthday) {
             $username = $birthday->telegram_username ? "@{$birthday->telegram_username}" : "без username";
-            $message .= "{$birthday->name} ({$username}) — " . $birthday->birth_date->format('d.m') . "\n";
+
+            // Format date: show only day and month, regardless of year
+            $formattedDate = $birthday->birth_date->format('d.m');
+            $message .= "{$birthday->name} ({$username}) — {$formattedDate}\n";
+
             $keyboard[] = [[
                 'text' => "❌ Удалить {$birthday->name}",
                 'callback_data' => "delete_{$birthday->id}"
@@ -60,7 +64,38 @@ class BirthdayService
 
     public function validateDate(string $date): bool
     {
-        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date);
+        // Check for YYYY-MM-DD format
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return checkdate((int)substr($date, 5, 2), (int)substr($date, 8, 2), (int)substr($date, 0, 4));
+        }
+
+        // Check for MM-DD format
+        if (preg_match('/^\d{2}-\d{2}$/', $date)) {
+            // Use 1970 as dummy year for validation
+            return checkdate((int)substr($date, 0, 2), (int)substr($date, 3, 2), 1970);
+        }
+
+        return false;
+    }
+
+    /**
+     * Normalize date to YYYY-MM-DD format
+     * If only MM-DD is provided, use 0000 as year
+     */
+    public function normalizeDate(string $date): string
+    {
+        // If already in YYYY-MM-DD format, return as is
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return $date;
+        }
+
+        // If in MM-DD format, add 0000 as year
+        if (preg_match('/^\d{2}-\d{2}$/', $date)) {
+            return '0000-' . $date;
+        }
+
+        // If format is invalid, return original (will be caught by validation)
+        return $date;
     }
 
     public function getTodaysBirthdays(): array

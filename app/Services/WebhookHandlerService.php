@@ -62,30 +62,60 @@ class WebhookHandlerService
 
         if ($state && $state['state'] === 'awaiting_name') {
             $this->stateService->updateStateWithTempName($userId, $text, 'awaiting_username');
-            $this->telegramBot->sendMessage($chatId, "Теперь введите Telegram username именинника (без @):");
+            $this->telegramBot->sendMessage(
+                $chatId,
+                'Теперь введите Telegram username именинника (с @ или без):'
+            );
             return;
         }
 
         if ($state && $state['state'] === 'awaiting_username') {
             $input = trim($text);
             if (empty($input)) {
-                $this->telegramBot->sendMessage($chatId, "❌ Поле не может быть пустым. Введите Telegram username (без @):");
+                $this->telegramBot->sendMessage(
+                    $chatId,
+                    '❌ Поле не может быть пустым. Введите Telegram username (с @ или без):'
+                );
                 return;
             }
 
-            // Save username as is, without checking chat_id
-            $this->stateService->updateStateWithTempNameAndUsername($userId, $state['temp_name'], $input, 'awaiting_date');
-            $this->telegramBot->sendMessage($chatId, "Теперь введите дату рождения в формате ГГГГ-ММ-ДД:");
+            // Normalize username (remove @ if present)
+            $normalizedUsername = $this->normalizeUsername($input);
+
+            // Save normalized username
+            $this->stateService->updateStateWithTempNameAndUsername(
+                $userId,
+                $state['temp_name'],
+                $normalizedUsername,
+                'awaiting_date'
+            );
+            $this->telegramBot->sendMessage(
+                $chatId,
+                'Теперь введите дату рождения в формате ГГГГ-ММ-ДД или ММ-ДД:'
+            );
             return;
         }
 
         if ($state && $state['state'] === 'awaiting_date') {
             if (!$this->birthdayService->validateDate($text)) {
-                $this->telegramBot->sendMessage($chatId, "❌ Неверный формат. Введите в формате ГГГГ-ММ-ДД:");
+                $this->telegramBot->sendMessage(
+                    $chatId,
+                    '❌ Неверный формат. Введите в формате ГГГГ-ММ-ДД или ММ-ДД:'
+                );
                 return;
             }
 
-            $this->birthdayService->addBirthday($userId, $chatId, $state['temp_name'], $state['temp_username'], null, $text);
+            // Normalize date to YYYY-MM-DD format
+            $normalizedDate = $this->birthdayService->normalizeDate($text);
+
+            $this->birthdayService->addBirthday(
+                $userId,
+                $chatId,
+                $state['temp_name'],
+                $state['temp_username'],
+                null,
+                $normalizedDate
+            );
             $this->stateService->clearState($userId);
             return;
         }
@@ -117,7 +147,8 @@ class WebhookHandlerService
                 $this->telegramBot->answerCallbackQuery($callback->getId(), '📨 Поздравление отправлено!');
             } else {
                 // If chat_id not found, send to current chat with mention
-                $greetingWithMention = "🎉 С днём рождения, [{$name}](https://t.me/{$username})!\nЖелаю счастья, радости и тепла!";
+                $greetingWithMention = '🎉 С днём рождения, [' . $name . '](https://t.me/' . $username . ')!'
+                    . PHP_EOL . 'Желаю счастья, радости и тепла!';
                 $this->telegramBot->sendMessage($chatId, $greetingWithMention, ['parse_mode' => 'Markdown']);
                 $this->telegramBot->answerCallbackQuery($callback->getId(), '📨 Поздравление отправлено в чат!');
             }
@@ -128,5 +159,13 @@ class WebhookHandlerService
     {
         $birthday = Birthday::where('telegram_username', $username)->first();
         return $birthday ? $birthday->birthday_chat_id : null;
+    }
+
+    /**
+     * Normalize Telegram username by removing @ symbol if present
+     */
+    private function normalizeUsername(string $username): string
+    {
+        return ltrim($username, '@');
     }
 }
