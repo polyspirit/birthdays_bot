@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserState extends Model
 {
+    protected $primaryKey = 'user_id';
+    public $incrementing = false;
+    protected $keyType = 'integer';
+
     protected $fillable = [
         'user_id',
         'state',
