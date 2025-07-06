@@ -120,8 +120,41 @@ class WebhookHandlerService
             return;
         }
 
-        $this->telegramBot->sendMessage($chatId, 'Команды:' 
-            . PHP_EOL . '/add — добавить именинника' 
+        if ($state && $state['state'] === 'awaiting_greeting_style') {
+            $style = trim($text);
+            if (empty($style)) {
+                $this->telegramBot->sendMessage(
+                    $chatId,
+                    '❌ Стиль не может быть пустым. Введите стиль поздравления:'
+                );
+                return;
+            }
+
+            try {
+                $openAIService = new OpenAIService();
+                $greeting = $openAIService->generateBirthdayGreeting($state['temp_name'], $style);
+
+                // Send greeting to birthday person
+                $birthdayChatId = $this->getChatIdByUsername($state['temp_username']);
+                if ($birthdayChatId) {
+                    $this->telegramBot->sendMessage($birthdayChatId, $greeting);
+                    $this->telegramBot->sendMessage($chatId, '🤖 ИИ-поздравление отправлено!');
+                } else {
+                    // If chat_id not found, send to current chat with mention
+                    $greetingWithMention = $greeting . PHP_EOL . PHP_EOL . 'https://t.me/' . $state['temp_username'];
+                    $this->telegramBot->sendMessage($chatId, $greetingWithMention, ['parse_mode' => 'Markdown']);
+                    $this->telegramBot->sendMessage($chatId, '🤖 ИИ-поздравление отправлено в чат!');
+                }
+            } catch (\Exception $e) {
+                $this->telegramBot->sendMessage($chatId, '❌ Ошибка генерации поздравления: ' . $e->getMessage());
+            }
+
+            $this->stateService->clearState($userId);
+            return;
+        }
+
+        $this->telegramBot->sendMessage($chatId, 'Команды:'
+            . PHP_EOL . '/add — добавить именинника'
             . PHP_EOL . '/list — список и удаление');
     }
 
@@ -136,7 +169,7 @@ class WebhookHandlerService
             $this->birthdayService->deleteBirthday($id, $userId, $chatId, $callback->getId());
         }
 
-        if (preg_match('/^greet_(.+)_(.+)$/', $data, $m)) {
+        if (preg_match('/^greet_simple_(.+)_(.+)$/', $data, $m)) {
             $name = urldecode($m[1]);
             $username = urldecode($m[2]);
 
@@ -152,6 +185,101 @@ class WebhookHandlerService
                 $greetingWithMention = $greeting . PHP_EOL . PHP_EOL . 'https://t.me/' . $username;
                 $this->telegramBot->sendMessage($chatId, $greetingWithMention, ['parse_mode' => 'Markdown']);
                 $this->telegramBot->answerCallbackQuery($callback->getId(), '📨 Поздравление отправлено в чат!');
+            }
+        }
+
+        if (preg_match('/^greet_ai_(.+)_(.+)$/', $data, $m)) {
+            $name = urldecode($m[1]);
+            $username = urldecode($m[2]);
+
+            // Set state to await greeting style
+            $this->stateService->updateStateWithTempNameAndUsername(
+                $userId,
+                $name,
+                $username,
+                'awaiting_greeting_style'
+            );
+
+            // Show predefined styles as buttons
+            $keyboard = [
+                [
+                    ['text' => '🎉 Весёлое', 'callback_data' => 'style_fun_' . urlencode($name) . '_' . urlencode($username)],
+                    ['text' => '💼 Официальное', 'callback_data' => 'style_formal_' . urlencode($name) . '_' . urlencode($username)]
+                ],
+                [
+                    ['text' => '💕 Романтичное', 'callback_data' => 'style_romantic_' . urlencode($name) . '_' . urlencode($username)],
+                    ['text' => '🤝 Дружеское', 'callback_data' => 'style_friendly_' . urlencode($name) . '_' . urlencode($username)]
+                ],
+                [
+                    ['text' => '📝 Поэтичное', 'callback_data' => 'style_poetic_' . urlencode($name) . '_' . urlencode($username)],
+                    ['text' => '😄 Юмористическое', 'callback_data' => 'style_humorous_' . urlencode($name) . '_' . urlencode($username)]
+                ],
+                [
+                    ['text' => '✏️ Свой стиль', 'callback_data' => 'style_custom_' . urlencode($name) . '_' . urlencode($username)]
+                ]
+            ];
+
+            $this->telegramBot->sendMessage(
+                $chatId,
+                'Выберите стиль поздравления или введите свой:',
+                ['inline_keyboard' => $keyboard]
+            );
+            $this->telegramBot->answerCallbackQuery($callback->getId(), 'Выберите стиль');
+        }
+
+        // Handle predefined style selections
+        if (preg_match('/^style_(.+)_(.+)_(.+)$/', $data, $m)) {
+            $style = urldecode($m[1]);
+            $name = urldecode($m[2]);
+            $username = urldecode($m[3]);
+
+            if ($style === 'custom') {
+                // Set state to await custom style input
+                $this->stateService->updateStateWithTempNameAndUsername(
+                    $userId,
+                    $name,
+                    $username,
+                    'awaiting_greeting_style'
+                );
+
+                $this->telegramBot->sendMessage(
+                    $chatId,
+                    'Введите свой стиль поздравления:'
+                );
+                $this->telegramBot->answerCallbackQuery($callback->getId(), 'Введите свой стиль');
+                return;
+            }
+
+            // Map style codes to Russian descriptions
+            $styleMap = [
+                'fun' => 'весёлое',
+                'formal' => 'официальное',
+                'romantic' => 'романтичное',
+                'friendly' => 'дружеское',
+                'poetic' => 'поэтичное',
+                'humorous' => 'юмористическое'
+            ];
+
+            $styleText = $styleMap[$style] ?? $style;
+
+            try {
+                $openAIService = new OpenAIService();
+                $greeting = $openAIService->generateBirthdayGreeting($name, $styleText);
+
+                // Send greeting to birthday person
+                $birthdayChatId = $this->getChatIdByUsername($username);
+                if ($birthdayChatId) {
+                    $this->telegramBot->sendMessage($birthdayChatId, $greeting);
+                    $this->telegramBot->answerCallbackQuery($callback->getId(), '🤖 ИИ-поздравление отправлено!');
+                } else {
+                    // If chat_id not found, send to current chat with mention
+                    $greetingWithMention = $greeting . PHP_EOL . PHP_EOL . 'https://t.me/' . $username;
+                    $this->telegramBot->sendMessage($chatId, $greetingWithMention, ['parse_mode' => 'Markdown']);
+                    $this->telegramBot->answerCallbackQuery($callback->getId(), '🤖 ИИ-поздравление отправлено в чат!');
+                }
+            } catch (\Exception $e) {
+                $this->telegramBot->sendMessage($chatId, '❌ Ошибка генерации поздравления: ' . $e->getMessage());
+                $this->telegramBot->answerCallbackQuery($callback->getId(), '❌ Ошибка');
             }
         }
     }
