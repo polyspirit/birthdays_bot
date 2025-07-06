@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\TelegramUser;
 use App\Models\Birthday;
+use App\Enums\GreetingStyleEnum;
 
 class WebhookHandlerService
 {
@@ -200,45 +201,8 @@ class WebhookHandlerService
                 'awaiting_greeting_style'
             );
 
-            // Show predefined styles as buttons
-            $keyboard = [
-                [
-                    [
-                        'text' => '🎉 Весёлое',
-                        'callback_data' => 'style_fun_' . urlencode($name) . '_' . urlencode($username)
-                    ],
-                    [
-                        'text' => '💼 Официальное',
-                        'callback_data' => 'style_formal_' . urlencode($name) . '_' . urlencode($username)
-                    ],
-                ],
-                [
-                    [
-                        'text' => '💕 Романтичное',
-                        'callback_data' => 'style_romantic_' . urlencode($name) . '_' . urlencode($username)
-                    ],
-                    [
-                        'text' => '🤝 Дружеское', 'callback_data' => 'style_friendly_' . urlencode($name)
-                            . '_' . urlencode($username)
-                    ],
-                ],
-                [
-                    [
-                        'text' => '📝 Поэтичное',
-                        'callback_data' => 'style_poetic_' . urlencode($name) . '_' . urlencode($username)
-                    ],
-                    [
-                        'text' => '😄 Юмористическое',
-                        'callback_data' => 'style_humorous_' . urlencode($name) . '_' . urlencode($username)
-                    ]
-                ],
-                [
-                    [
-                        'text' => '✏️ Свой стиль',
-                        'callback_data' => 'style_custom_' . urlencode($name) . '_' . urlencode($username)
-                    ]
-                ]
-            ];
+            // Show predefined styles as buttons using Enum
+            $keyboard = GreetingStyleEnum::getAllStyles($name, $username);
 
             $this->telegramBot->sendMessage(
                 $chatId,
@@ -271,17 +235,15 @@ class WebhookHandlerService
                 return;
             }
 
-            // Map style codes to Russian descriptions
-            $styleMap = [
-                'fun' => 'весёлое',
-                'formal' => 'официальное',
-                'romantic' => 'романтичное',
-                'friendly' => 'дружеское',
-                'poetic' => 'поэтичное',
-                'humorous' => 'юмористическое'
-            ];
+            // Get style from Enum
+            $greetingStyle = GreetingStyleEnum::fromString($style);
+            if (!$greetingStyle) {
+                $this->telegramBot->sendMessage($chatId, '❌ Неизвестный стиль поздравления');
+                $this->telegramBot->answerCallbackQuery($callback->getId(), '❌ Ошибка');
+                return;
+            }
 
-            $styleText = $styleMap[$style] ?? $style;
+            $styleText = $greetingStyle->getRussianDescription();
 
             try {
                 $openAIService = new OpenAIService();
