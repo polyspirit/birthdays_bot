@@ -14,8 +14,14 @@ class BirthdayService
         $this->telegramBot = $telegramBot;
     }
 
-    public function addBirthday(int $userId, int $chatId, string $name, string $telegramUsername, ?int $birthdayChatId, string $birthDate): void
-    {
+    public function addBirthday(
+        int $userId, 
+        int $chatId, 
+        string $name, 
+        string $telegramUsername, 
+        ?int $birthdayChatId, 
+        string $birthDate
+    ): void {
         Birthday::create([
             'user_id' => $userId,
             'name' => $name,
@@ -24,7 +30,7 @@ class BirthdayService
             'birth_date' => $birthDate,
         ]);
 
-        $this->telegramBot->sendMessage($chatId, "✅ {$name} (@{$telegramUsername}) добавлен(а)!");
+        $this->telegramBot->sendMessage($chatId, '✅' . $name . ' (@' . $telegramUsername . ') добавлен(а)!');
     }
 
     public function listBirthdays(int $userId, int $chatId): void
@@ -32,23 +38,23 @@ class BirthdayService
         $birthdays = Birthday::where('user_id', $userId)->get();
 
         if ($birthdays->isEmpty()) {
-            $this->telegramBot->sendMessage($chatId, "У вас пока нет добавленных именинников.");
+            $this->telegramBot->sendMessage($chatId, 'У вас пока нет добавленных именинников.');
             return;
         }
 
         $keyboard = [];
-        $message = "🎂 Ваши именинники:\n";
+        $message = '🎂 Ваши именинники:' . PHP_EOL;
 
         foreach ($birthdays as $birthday) {
             $username = $birthday->telegram_username ? "@{$birthday->telegram_username}" : "без username";
 
             // Format date: show only day and month, regardless of year
             $formattedDate = $birthday->birth_date->format('d.m');
-            $message .= "{$birthday->name} ({$username}) — {$formattedDate}\n";
+            $message .= $birthday->name . ' (' . $username . ') — ' . $formattedDate . PHP_EOL;
 
             $keyboard[] = [[
-                'text' => "❌ Удалить {$birthday->name}",
-                'callback_data' => "delete_{$birthday->id}"
+                'text' => '❌ Удалить ' . $birthday->name,
+                'callback_data' => 'delete_' . $birthday->id
             ]];
         }
 
@@ -59,7 +65,7 @@ class BirthdayService
     {
         Birthday::where('id', $id)->where('user_id', $userId)->delete();
         $this->telegramBot->answerCallbackQuery($callbackQueryId, 'Удалено ✅');
-        $this->telegramBot->sendMessage($chatId, "Именинник удалён.");
+        $this->telegramBot->sendMessage($chatId, 'Именинник удалён.');
     }
 
     public function validateDate(string $date): bool
@@ -104,7 +110,13 @@ class BirthdayService
 
         return Birthday::join('telegram_users', 'birthdays.user_id', '=', 'telegram_users.user_id')
             ->whereRaw("DATE_FORMAT(birth_date, '%m-%d') = ?", [$today])
-            ->select('birthdays.name', 'birthdays.telegram_username', 'birthdays.birthday_chat_id', 'birthdays.birth_date', 'telegram_users.chat_id')
+            ->select(
+                'birthdays.name', 
+                'birthdays.telegram_username', 
+                'birthdays.birthday_chat_id', 
+                'birthdays.birth_date', 
+                'telegram_users.chat_id'
+            )
             ->get()
             ->toArray();
     }

@@ -120,7 +120,9 @@ class WebhookHandlerService
             return;
         }
 
-        $this->telegramBot->sendMessage($chatId, "Команды:\n/add — добавить именинника\n/list — список и удаление");
+        $this->telegramBot->sendMessage($chatId, 'Команды:' 
+            . PHP_EOL . '/add — добавить именинника' 
+            . PHP_EOL . '/list — список и удаление');
     }
 
     private function handleCallbackQuery($callback): void
