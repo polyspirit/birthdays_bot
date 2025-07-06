@@ -42,8 +42,12 @@ class UserStateService
         );
     }
 
-    public function updateStateWithTempNameAndUsername(int $userId, string $tempName, string $tempUsername, string $newState): void
-    {
+    public function updateStateWithTempNameAndUsername(
+        int $userId,
+        string $tempName,
+        ?string $tempUsername,
+        string $newState
+    ): void {
         UserState::updateOrCreate(
             ['user_id' => $userId],
             [
@@ -54,8 +58,13 @@ class UserStateService
         );
     }
 
-    public function updateStateWithTempNameUsernameAndChatId(int $userId, string $tempName, string $tempUsername, int $tempBirthdayChatId, string $newState): void
-    {
+    public function updateStateWithTempNameUsernameAndChatId(
+        int $userId,
+        string $tempName,
+        string $tempUsername,
+        int $tempBirthdayChatId,
+        string $newState
+    ): void {
         UserState::updateOrCreate(
             ['user_id' => $userId],
             [

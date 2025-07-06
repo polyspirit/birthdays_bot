@@ -65,17 +65,34 @@ class WebhookHandlerService
             $this->stateService->updateStateWithTempName($userId, $text, 'awaiting_username');
             $this->telegramBot->sendMessage(
                 $chatId,
-                'Теперь введите Telegram username именинника (с @ или без):'
+                'Теперь введите Telegram username именинника (с @ или без) или отправьте /skip чтобы пропустить:'
             );
             return;
         }
 
         if ($state && $state['state'] === 'awaiting_username') {
             $input = trim($text);
+
+            if ($input === '/skip') {
+                // Skip username step
+                $this->stateService->updateStateWithTempNameAndUsername(
+                    $userId,
+                    $state['temp_name'],
+                    null,
+                    'awaiting_date'
+                );
+                $this->telegramBot->sendMessage(
+                    $chatId,
+                    'Username пропущен. Теперь введите дату рождения в формате ГГГГ-ММ-ДД или ММ-ДД:'
+                );
+                return;
+            }
+
             if (empty($input)) {
                 $this->telegramBot->sendMessage(
                     $chatId,
-                    '❌ Поле не может быть пустым. Введите Telegram username (с @ или без):'
+                    '❌ Поле не может быть пустым. Введите Telegram username (с @ или без).'
+                        . PHP_EOL . 'Или отправьте /skip чтобы пропустить.'
                 );
                 return;
             }
@@ -268,8 +285,11 @@ class WebhookHandlerService
         }
     }
 
-    private function getChatIdByUsername(string $username): ?int
+    private function getChatIdByUsername(?string $username): ?int
     {
+        if (!$username) {
+            return null;
+        }
         $birthday = Birthday::where('telegram_username', $username)->first();
         return $birthday ? $birthday->birthday_chat_id : null;
     }

@@ -18,7 +18,7 @@ class BirthdayService
         int $userId,
         int $chatId,
         string $name,
-        string $telegramUsername,
+        ?string $telegramUsername,
         ?int $birthdayChatId,
         string $birthDate
     ): void {
@@ -30,7 +30,8 @@ class BirthdayService
             'birth_date' => $birthDate,
         ]);
 
-        $this->telegramBot->sendMessage($chatId, '✅ ' . $name . ' (@' . $telegramUsername . ') добавлен(а)!');
+        $usernameText = $telegramUsername ? ' (@' . $telegramUsername . ')' : '';
+        $this->telegramBot->sendMessage($chatId, '✅ ' . $name . $usernameText . ' добавлен(а)!');
     }
 
     public function listBirthdays(int $userId, int $chatId): void

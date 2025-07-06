@@ -20,8 +20,8 @@ class NotificationService
         $tomorrowBirthdays = $this->getTomorrowBirthdays();
         foreach ($tomorrowBirthdays as $birthday) {
             $ageText = $this->getAgeText($birthday['birth_date'] ?? null);
-            $text = '📅 Завтра день рождения у ' . $birthday['name']
-                . ' @' . urlencode($birthday['telegram_username']) . '!'
+            $usernameText = $birthday['telegram_username'] ? ' @' . urlencode($birthday['telegram_username']) : '';
+            $text = '📅 Завтра день рождения у ' . $birthday['name'] . $usernameText . '!'
                 . $ageText
                 . PHP_EOL . PHP_EOL . 'Не забудьте поздравить!';
             $this->telegramBot->sendMessage($birthday['chat_id'], $text);
@@ -31,25 +31,31 @@ class NotificationService
         $todayBirthdays = $this->getTodaysBirthdays();
         foreach ($todayBirthdays as $birthday) {
             $ageText = $this->getAgeText($birthday['birth_date'] ?? null);
-            $text = '🎉 Сегодня день рождения у ' . $birthday['name']
-                . ' @' . urlencode($birthday['telegram_username']) . '!'
+            $usernameText = $birthday['telegram_username'] ? ' @' . urlencode($birthday['telegram_username']) : '';
+            $text = '🎉 Сегодня день рождения у ' . $birthday['name'] . $usernameText . '!'
                 . $ageText
                 . PHP_EOL . PHP_EOL . 'Поздравьте его/её!';
-            $keyboard = [
-                [
+
+            // Only show greeting buttons if username is available
+            if ($birthday['telegram_username']) {
+                $keyboard = [
                     [
-                        'text' => '📨 Простое поздравление',
-                        'callback_data' => 'greet_simple_' . urlencode($birthday['name'])
-                            . '_' . urlencode($birthday['telegram_username'])
-                    ],
-                    [
-                        'text' => '🤖 ИИ поздравление',
-                        'callback_data' => 'greet_ai_' . urlencode($birthday['name'])
-                            . '_' . urlencode($birthday['telegram_username'])
+                        [
+                            'text' => '📨 Простое поздравление',
+                            'callback_data' => 'greet_simple_' . urlencode($birthday['name'])
+                                . '_' . urlencode($birthday['telegram_username'])
+                        ],
+                        [
+                            'text' => '🤖 ИИ поздравление',
+                            'callback_data' => 'greet_ai_' . urlencode($birthday['name'])
+                                . '_' . urlencode($birthday['telegram_username'])
+                        ]
                     ]
-                ]
-            ];
-            $this->telegramBot->sendMessage($birthday['chat_id'], $text, ['inline_keyboard' => $keyboard]);
+                ];
+                $this->telegramBot->sendMessage($birthday['chat_id'], $text, ['inline_keyboard' => $keyboard]);
+            } else {
+                $this->telegramBot->sendMessage($birthday['chat_id'], $text);
+            }
         }
     }
 
