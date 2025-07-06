@@ -138,7 +138,7 @@ class WebhookHandlerService
             $name = urldecode($m[1]);
             $username = urldecode($m[2]);
 
-            $greeting = "🎉 С днём рождения, {$name}!\nЖелаю счастья, радости и тепла!";
+            $greeting = $name . ', с днём рождения! 🎉' . PHP_EOL . 'Желаю счастья, радости, любви и тепла!';
 
             // Send greeting to birthday person
             $birthdayChatId = $this->getChatIdByUsername($username);
@@ -147,8 +147,7 @@ class WebhookHandlerService
                 $this->telegramBot->answerCallbackQuery($callback->getId(), '📨 Поздравление отправлено!');
             } else {
                 // If chat_id not found, send to current chat with mention
-                $greetingWithMention = '🎉 С днём рождения, [' . $name . '](https://t.me/' . $username . ')!'
-                    . PHP_EOL . 'Желаю счастья, радости и тепла!';
+                $greetingWithMention = $greeting . PHP_EOL . PHP_EOL . 'https://t.me/' . $username;
                 $this->telegramBot->sendMessage($chatId, $greetingWithMention, ['parse_mode' => 'Markdown']);
                 $this->telegramBot->answerCallbackQuery($callback->getId(), '📨 Поздравление отправлено в чат!');
             }

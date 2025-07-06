@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Birthday;
+use Carbon\Carbon;
 
 class NotificationService
 {
@@ -18,25 +19,77 @@ class NotificationService
         // Send notifications for birthdays tomorrow (reminder)
         $tomorrowBirthdays = $this->getTomorrowBirthdays();
         foreach ($tomorrowBirthdays as $birthday) {
-            $text = "📅 Завтра день рождения у {$birthday['name']}!\n\nНе забудьте поздравить!";
-            $keyboard = [
-                [
-                    ['text' => '📨 Отправить поздравление', 'callback_data' => "greet_" . urlencode($birthday['name']) . "_" . urlencode($birthday['telegram_username'])]
-                ]
-            ];
-            $this->telegramBot->sendMessage($birthday['chat_id'], $text, ['inline_keyboard' => $keyboard]);
+            $ageText = $this->getAgeText($birthday['birth_date'] ?? null);
+            $text = '📅 Завтра день рождения у ' . $birthday['name'] 
+                . ' @' . urlencode($birthday['telegram_username']) . '!' 
+                . $ageText
+                . PHP_EOL . PHP_EOL . 'Не забудьте поздравить!';
+            $this->telegramBot->sendMessage($birthday['chat_id'], $text);
         }
 
         // Send notifications for birthdays today
         $todayBirthdays = $this->getTodaysBirthdays();
         foreach ($todayBirthdays as $birthday) {
-            $text = "🎉 Сегодня день рождения у {$birthday['name']}!\n\nПоздравьте его/её!";
+            $ageText = $this->getAgeText($birthday['birth_date'] ?? null);
+            $text = '🎉 Сегодня день рождения у ' . $birthday['name']
+                . ' @' . urlencode($birthday['telegram_username']) . '!'
+                . $ageText
+                . PHP_EOL . PHP_EOL . 'Поздравьте его/её!';
             $keyboard = [
                 [
-                    ['text' => '📨 Отправить поздравление', 'callback_data' => "greet_" . urlencode($birthday['name']) . "_" . urlencode($birthday['telegram_username'])]
+                    [
+                        'text' => '📨 Отправить поздравление', 
+                        'callback_data' => 'greet_' . urlencode($birthday['name']) 
+                            . '_' . urlencode($birthday['telegram_username'])]
                 ]
             ];
             $this->telegramBot->sendMessage($birthday['chat_id'], $text, ['inline_keyboard' => $keyboard]);
+        }
+    }
+
+    /**
+     * Calculate age and return age text if birth year is not 0000
+     */
+    private function getAgeText(?string $birthDate): string
+    {
+        if ($birthDate === null) {
+            return '';
+        }
+        
+        $birthYear = Carbon::parse($birthDate)->year;
+        
+        // If year is 0000, don't show age
+        if ($birthYear === 0) {
+            return '';
+        }
+        
+        $age = Carbon::now()->year - $birthYear;
+        $ageSuffix = $this->getAgeSuffix($age);
+        
+        return PHP_EOL . 'Исполняется: ' . $age . ' ' . $ageSuffix;
+    }
+
+    /**
+     * Get proper Russian suffix for age
+     */
+    private function getAgeSuffix(int $age): string
+    {
+        $lastDigit = $age % 10;
+        $lastTwoDigits = $age % 100;
+        
+        if ($lastTwoDigits >= 11 && $lastTwoDigits <= 19) {
+            return 'лет';
+        }
+        
+        switch ($lastDigit) {
+            case 1:
+                return 'год';
+            case 2:
+            case 3:
+            case 4:
+                return 'года';
+            default:
+                return 'лет';
         }
     }
 
@@ -46,7 +99,13 @@ class NotificationService
 
         return Birthday::join('telegram_users', 'birthdays.user_id', '=', 'telegram_users.user_id')
             ->whereRaw("DATE_FORMAT(birth_date, '%m-%d') = ?", [$today])
-            ->select('birthdays.name', 'birthdays.telegram_username', 'birthdays.birthday_chat_id', 'birthdays.birth_date', 'telegram_users.chat_id')
+            ->select(
+                'birthdays.name', 
+                'birthdays.telegram_username', 
+                'birthdays.birthday_chat_id', 
+                'birthdays.birth_date', 
+                'telegram_users.chat_id'
+            )
             ->get()
             ->toArray();
     }
@@ -57,7 +116,13 @@ class NotificationService
 
         return Birthday::join('telegram_users', 'birthdays.user_id', '=', 'telegram_users.user_id')
             ->whereRaw("DATE_FORMAT(birth_date, '%m-%d') = ?", [$tomorrow])
-            ->select('birthdays.name', 'birthdays.telegram_username', 'birthdays.birthday_chat_id', 'birthdays.birth_date', 'telegram_users.chat_id')
+            ->select(
+                'birthdays.name', 
+                'birthdays.telegram_username', 
+                'birthdays.birthday_chat_id', 
+                'birthdays.birth_date', 
+                'telegram_users.chat_id'
+            )
             ->get()
             ->toArray();
     }
