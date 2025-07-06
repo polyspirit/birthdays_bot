@@ -15,9 +15,21 @@ class NotificationService
 
     public function sendDailyBirthdayNotifications(): void
     {
-        $birthdays = $this->getTodaysBirthdays();
+        // Send notifications for birthdays tomorrow (reminder)
+        $tomorrowBirthdays = $this->getTomorrowBirthdays();
+        foreach ($tomorrowBirthdays as $birthday) {
+            $text = "📅 Завтра день рождения у {$birthday['name']}!\n\nНе забудьте поздравить!";
+            $keyboard = [
+                [
+                    ['text' => '📨 Отправить поздравление', 'callback_data' => "greet_" . urlencode($birthday['name']) . "_" . urlencode($birthday['telegram_username'])]
+                ]
+            ];
+            $this->telegramBot->sendMessage($birthday['chat_id'], $text, ['inline_keyboard' => $keyboard]);
+        }
 
-        foreach ($birthdays as $birthday) {
+        // Send notifications for birthdays today
+        $todayBirthdays = $this->getTodaysBirthdays();
+        foreach ($todayBirthdays as $birthday) {
             $text = "🎉 Сегодня день рождения у {$birthday['name']}!\n\nПоздравьте его/её!";
             $keyboard = [
                 [
@@ -34,6 +46,17 @@ class NotificationService
 
         return Birthday::join('telegram_users', 'birthdays.user_id', '=', 'telegram_users.user_id')
             ->whereRaw("DATE_FORMAT(birth_date, '%m-%d') = ?", [$today])
+            ->select('birthdays.name', 'birthdays.telegram_username', 'birthdays.birthday_chat_id', 'birthdays.birth_date', 'telegram_users.chat_id')
+            ->get()
+            ->toArray();
+    }
+
+    public function getTomorrowBirthdays(): array
+    {
+        $tomorrow = now()->addDay()->format('m-d');
+
+        return Birthday::join('telegram_users', 'birthdays.user_id', '=', 'telegram_users.user_id')
+            ->whereRaw("DATE_FORMAT(birth_date, '%m-%d') = ?", [$tomorrow])
             ->select('birthdays.name', 'birthdays.telegram_username', 'birthdays.birthday_chat_id', 'birthdays.birth_date', 'telegram_users.chat_id')
             ->get()
             ->toArray();

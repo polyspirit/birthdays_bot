@@ -31,16 +31,18 @@ class SendBirthdayNotifications extends Command
         $notificationService = new NotificationService($telegramBot);
 
         try {
-            $birthdays = $notificationService->getTodaysBirthdays();
+            $todayBirthdays = $notificationService->getTodaysBirthdays();
+            $tomorrowBirthdays = $notificationService->getTomorrowBirthdays();
+            $totalBirthdays = count($todayBirthdays) + count($tomorrowBirthdays);
 
-            if (empty($birthdays)) {
-                $this->info('No birthdays found for today.');
+            if ($totalBirthdays === 0) {
+                $this->info('No birthdays found for today or tomorrow.');
                 return 0;
             }
 
             $notificationService->sendDailyBirthdayNotifications();
 
-            $this->info("Successfully sent " . count($birthdays) . " birthday notifications.");
+            $this->info("Successfully sent birthday notifications: " . count($todayBirthdays) . " for today, " . count($tomorrowBirthdays) . " for tomorrow.");
             return 0;
         } catch (\Exception $e) {
             $this->error('Error sending notifications: ' . $e->getMessage());
