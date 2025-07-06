@@ -203,19 +203,40 @@ class WebhookHandlerService
             // Show predefined styles as buttons
             $keyboard = [
                 [
-                    ['text' => '🎉 Весёлое', 'callback_data' => 'style_fun_' . urlencode($name) . '_' . urlencode($username)],
-                    ['text' => '💼 Официальное', 'callback_data' => 'style_formal_' . urlencode($name) . '_' . urlencode($username)]
+                    [
+                        'text' => '🎉 Весёлое',
+                        'callback_data' => 'style_fun_' . urlencode($name) . '_' . urlencode($username)
+                    ],
+                    [
+                        'text' => '💼 Официальное',
+                        'callback_data' => 'style_formal_' . urlencode($name) . '_' . urlencode($username)
+                    ],
                 ],
                 [
-                    ['text' => '💕 Романтичное', 'callback_data' => 'style_romantic_' . urlencode($name) . '_' . urlencode($username)],
-                    ['text' => '🤝 Дружеское', 'callback_data' => 'style_friendly_' . urlencode($name) . '_' . urlencode($username)]
+                    [
+                        'text' => '💕 Романтичное',
+                        'callback_data' => 'style_romantic_' . urlencode($name) . '_' . urlencode($username)
+                    ],
+                    [
+                        'text' => '🤝 Дружеское', 'callback_data' => 'style_friendly_' . urlencode($name)
+                            . '_' . urlencode($username)
+                    ],
                 ],
                 [
-                    ['text' => '📝 Поэтичное', 'callback_data' => 'style_poetic_' . urlencode($name) . '_' . urlencode($username)],
-                    ['text' => '😄 Юмористическое', 'callback_data' => 'style_humorous_' . urlencode($name) . '_' . urlencode($username)]
+                    [
+                        'text' => '📝 Поэтичное',
+                        'callback_data' => 'style_poetic_' . urlencode($name) . '_' . urlencode($username)
+                    ],
+                    [
+                        'text' => '😄 Юмористическое',
+                        'callback_data' => 'style_humorous_' . urlencode($name) . '_' . urlencode($username)
+                    ]
                 ],
                 [
-                    ['text' => '✏️ Свой стиль', 'callback_data' => 'style_custom_' . urlencode($name) . '_' . urlencode($username)]
+                    [
+                        'text' => '✏️ Свой стиль',
+                        'callback_data' => 'style_custom_' . urlencode($name) . '_' . urlencode($username)
+                    ]
                 ]
             ];
 
@@ -273,7 +294,7 @@ class WebhookHandlerService
                     $this->telegramBot->answerCallbackQuery($callback->getId(), '🤖 ИИ-поздравление отправлено!');
                 } else {
                     // If chat_id not found, send to current chat with mention
-                    $greetingWithMention = $greeting . PHP_EOL . PHP_EOL 
+                    $greetingWithMention = $greeting . PHP_EOL . PHP_EOL
                         . 'Скопируй и отправь https://t.me/' . $username;
                     $this->telegramBot->sendMessage($chatId, $greetingWithMention, ['parse_mode' => 'Markdown']);
                     $this->telegramBot->answerCallbackQuery($callback->getId(), '🤖 ИИ-поздравление отправлено в чат!');
