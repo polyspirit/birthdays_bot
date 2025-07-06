@@ -15,11 +15,11 @@ class BirthdayService
     }
 
     public function addBirthday(
-        int $userId, 
-        int $chatId, 
-        string $name, 
-        string $telegramUsername, 
-        ?int $birthdayChatId, 
+        int $userId,
+        int $chatId,
+        string $name,
+        string $telegramUsername,
+        ?int $birthdayChatId,
         string $birthDate
     ): void {
         Birthday::create([
@@ -30,7 +30,7 @@ class BirthdayService
             'birth_date' => $birthDate,
         ]);
 
-        $this->telegramBot->sendMessage($chatId, '✅' . $name . ' (@' . $telegramUsername . ') добавлен(а)!');
+        $this->telegramBot->sendMessage($chatId, '✅ ' . $name . ' (@' . $telegramUsername . ') добавлен(а)!');
     }
 
     public function listBirthdays(int $userId, int $chatId): void
@@ -111,10 +111,10 @@ class BirthdayService
         return Birthday::join('telegram_users', 'birthdays.user_id', '=', 'telegram_users.user_id')
             ->whereRaw("DATE_FORMAT(birth_date, '%m-%d') = ?", [$today])
             ->select(
-                'birthdays.name', 
-                'birthdays.telegram_username', 
-                'birthdays.birthday_chat_id', 
-                'birthdays.birth_date', 
+                'birthdays.name',
+                'birthdays.telegram_username',
+                'birthdays.birthday_chat_id',
+                'birthdays.birth_date',
                 'telegram_users.chat_id'
             )
             ->get()
