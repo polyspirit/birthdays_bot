@@ -273,7 +273,8 @@ class WebhookHandlerService
                     $this->telegramBot->answerCallbackQuery($callback->getId(), '🤖 ИИ-поздравление отправлено!');
                 } else {
                     // If chat_id not found, send to current chat with mention
-                    $greetingWithMention = $greeting . PHP_EOL . PHP_EOL . 'https://t.me/' . $username;
+                    $greetingWithMention = $greeting . PHP_EOL . PHP_EOL 
+                        . 'Скопируй и отправь https://t.me/' . $username;
                     $this->telegramBot->sendMessage($chatId, $greetingWithMention, ['parse_mode' => 'Markdown']);
                     $this->telegramBot->answerCallbackQuery($callback->getId(), '🤖 ИИ-поздравление отправлено в чат!');
                 }
