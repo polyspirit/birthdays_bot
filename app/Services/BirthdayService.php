@@ -78,8 +78,8 @@ class BirthdayService
 
         // Check for MM-DD format
         if (preg_match('/^\d{2}-\d{2}$/', $date)) {
-            // Use 0000 as dummy year for validation
-            return checkdate((int)substr($date, 0, 2), (int)substr($date, 3, 2), 0000);
+            // Use 9996 as dummy year for validation (leap year to handle February 29)
+            return checkdate((int)substr($date, 0, 2), (int)substr($date, 3, 2), 9996);
         }
 
         return false;
