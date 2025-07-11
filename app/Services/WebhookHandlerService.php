@@ -59,6 +59,11 @@ class WebhookHandlerService
             return;
         }
 
+        if ($text === '/upcoming') {
+            $this->birthdayService->showUpcomingBirthdays($userId, $chatId);
+            return;
+        }
+
         $state = $this->stateService->getState($userId);
 
         if ($state && $state['state'] === 'awaiting_name') {
@@ -173,7 +178,8 @@ class WebhookHandlerService
 
         $this->telegramBot->sendMessage($chatId, 'Команды:'
             . PHP_EOL . '/add — добавить именинника'
-            . PHP_EOL . '/list — список и удаление');
+            . PHP_EOL . '/list — список и удаление'
+            . PHP_EOL . '/upcoming — ближайшие дни рождения');
     }
 
     private function handleCallbackQuery($callback): void

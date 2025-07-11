@@ -69,6 +69,57 @@ class BirthdayService
         $this->telegramBot->sendMessage($chatId, 'Именинник удалён.');
     }
 
+    public function showUpcomingBirthdays(int $userId, int $chatId): void
+    {
+        $upcomingBirthdays = $this->getUpcomingBirthdays($userId, 3);
+
+        if (empty($upcomingBirthdays)) {
+            $this->telegramBot->sendMessage($chatId, 'У вас пока нет добавленных именинников.');
+            return;
+        }
+
+        $message = '📅 Ближайшие дни рождения:' . PHP_EOL . PHP_EOL;
+
+        foreach ($upcomingBirthdays as $birthday) {
+            $username = $birthday['telegram_username'] ? "@{$birthday['telegram_username']}" : "без username";
+            $daysText = $this->getDaysText($birthday['days_until']);
+
+            $message .= "🎂 {$birthday['name']} ({$username})" . PHP_EOL;
+            $message .= "📅 {$birthday['formatted_date']} — {$daysText}" . PHP_EOL . PHP_EOL;
+        }
+
+        $this->telegramBot->sendMessage($chatId, $message);
+    }
+
+    private function getDaysText(int $days): string
+    {
+        if ($days === 0) {
+            return 'сегодня! 🎉';
+        }
+
+        if ($days === 1) {
+            return 'завтра! 🎉';
+        }
+
+        $lastDigit = $days % 10;
+        $lastTwoDigits = $days % 100;
+
+        if ($lastTwoDigits >= 11 && $lastTwoDigits <= 19) {
+            return "через {$days} дней";
+        }
+
+        switch ($lastDigit) {
+            case 1:
+                return "через {$days} день";
+            case 2:
+            case 3:
+            case 4:
+                return "через {$days} дня";
+            default:
+                return "через {$days} дней";
+        }
+    }
+
     public function validateDate(string $date): bool
     {
         // Check for YYYY-MM-DD format
@@ -119,6 +170,43 @@ class BirthdayService
                 'telegram_users.chat_id'
             )
             ->get()
+            ->toArray();
+    }
+
+    public function getUpcomingBirthdays(int $userId, int $limit = 3): array
+    {
+        $today = now();
+        $currentMonth = $today->month;
+        $currentDay = $today->day;
+
+        return Birthday::where('user_id', $userId)
+            ->get()
+            ->map(function ($birthday) use ($today) {
+                $birthMonth = $birthday->birth_date->month;
+                $birthDay = $birthday->birth_date->day;
+
+                // Calculate days until next birthday
+                $nextBirthday = $today->copy()->setDate($today->year, $birthMonth, $birthDay);
+
+                // If birthday has passed this year, calculate for next year
+                if ($nextBirthday->lt($today)) {
+                    $nextBirthday->addYear();
+                }
+
+                $daysUntil = $today->diffInDays($nextBirthday, false);
+
+                return [
+                    'name' => $birthday->name,
+                    'telegram_username' => $birthday->telegram_username,
+                    'birth_date' => $birthday->birth_date,
+                    'days_until' => $daysUntil,
+                    'next_birthday' => $nextBirthday,
+                    'formatted_date' => $birthday->birth_date->format('d.m')
+                ];
+            })
+            ->sortBy('days_until')
+            ->take($limit)
+            ->values()
             ->toArray();
     }
 }
