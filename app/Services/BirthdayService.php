@@ -87,7 +87,7 @@ class BirthdayService
 
     /**
      * Normalize date to YYYY-MM-DD format
-     * If only MM-DD is provided, use 0000 as year
+     * If only MM-DD is provided, use 9996 as year
      */
     public function normalizeDate(string $date): string
     {
@@ -96,9 +96,9 @@ class BirthdayService
             return $date;
         }
 
-        // If in MM-DD format, add 0000 as year
+        // If in MM-DD format, add 9996 as year
         if (preg_match('/^\d{2}-\d{2}$/', $date)) {
-            return '0000-' . $date;
+            return '9996-' . $date;
         }
 
         // If format is invalid, return original (will be caught by validation)

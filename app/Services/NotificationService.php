@@ -60,7 +60,7 @@ class NotificationService
     }
 
     /**
-     * Calculate age and return age text if birth year is not 0000
+     * Calculate age and return age text if birth year is not 9996
      */
     private function getAgeText(?string $birthDate): string
     {
@@ -70,8 +70,8 @@ class NotificationService
 
         $birthYear = Carbon::parse($birthDate)->year;
 
-        // If year is 0000, don't show age
-        if ($birthYear === 0) {
+        // If year is 9996, don't show age
+        if ($birthYear === 9996) {
             return '';
         }
 
