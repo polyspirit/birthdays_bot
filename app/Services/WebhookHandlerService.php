@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\TelegramUser;
 use App\Models\Birthday;
 use App\Enums\GreetingStyleEnum;
+use App\Services\ZodiacService;
 
 class WebhookHandlerService
 {
@@ -61,6 +62,12 @@ class WebhookHandlerService
 
         if ($text === '/upcoming') {
             $this->birthdayService->showUpcomingBirthdays($userId, $chatId);
+            return;
+        }
+
+        if ($text === '/info') {
+            $this->stateService->setState($userId, 'awaiting_info_input');
+            $this->telegramBot->sendMessage($chatId, "Введите дату в формате MM-DD или YYYY-MM-DD, либо имя именинника, либо telegram username:");
             return;
         }
 
@@ -143,6 +150,45 @@ class WebhookHandlerService
             return;
         }
 
+        if ($state && $state['state'] === 'awaiting_info_input') {
+            $input = trim($text);
+            if (empty($input)) {
+                $this->telegramBot->sendMessage(
+                    $chatId,
+                    '❌ Поле не может быть пустым. Введите дату в формате MM-DD или YYYY-MM-DD, либо имя именинника, либо telegram username:'
+                );
+                return;
+            }
+
+            try {
+                $zodiacService = new ZodiacService();
+                $result = $zodiacService->getZodiacInfo($input);
+
+                $message = "🔮 *Информация о знаке зодиака*\n\n";
+                $message .= "📅 Дата: " . $result['date'] . "\n";
+
+                if (isset($result['name'])) {
+                    $message .= "👤 Имя: " . $result['name'] . "\n";
+                }
+
+                $message .= "♈ Знак зодиака: " . $result['zodiac_sign'] . "\n";
+
+                if (isset($result['additional_info'])) {
+                    $message .= "\n📊 *Дополнительная информация:*\n";
+                    $message .= "📅 День недели: " . $result['additional_info']['day_of_week'] . "\n";
+                    $message .= "🐉 Китайский зодиак: " . $result['additional_info']['chinese_zodiac'] . "\n";
+                    $message .= "🌙 Фаза луны: " . $result['additional_info']['moon_phase'] . "\n";
+                }
+
+                $this->telegramBot->sendMessage($chatId, $message, ['parse_mode' => 'Markdown']);
+            } catch (\Exception $e) {
+                $this->telegramBot->sendMessage($chatId, '❌ Ошибка: ' . $e->getMessage());
+            }
+
+            $this->stateService->clearState($userId);
+            return;
+        }
+
         if ($state && $state['state'] === 'awaiting_greeting_style') {
             $style = trim($text);
             if (empty($style)) {
@@ -179,7 +225,8 @@ class WebhookHandlerService
         $this->telegramBot->sendMessage($chatId, 'Команды:'
             . PHP_EOL . '/add — добавить именинника'
             . PHP_EOL . '/list — список и удаление'
-            . PHP_EOL . '/upcoming — ближайшие дни рождения');
+            . PHP_EOL . '/upcoming — ближайшие дни рождения'
+            . PHP_EOL . '/info — информация о знаке зодиака');
     }
 
     private function handleCallbackQuery($callback): void
