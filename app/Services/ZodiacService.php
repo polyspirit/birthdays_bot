@@ -52,7 +52,7 @@ class ZodiacService
         // If specific year (not 9996), get additional information
         if ($date->year != 9996) {
             $result['additional_info'] = [
-                'day_of_week' => $date->format('l'),
+                'day_of_week' => $this->getRussianDayOfWeek($date),
                 'chinese_zodiac' => $this->getChineseZodiac($date->year),
                 'moon_phase' => $this->getMoonPhase($date),
             ];
@@ -70,44 +70,63 @@ class ZodiacService
         $day = $date->day;
 
         if (($month == 3 && $day >= 21) || ($month == 4 && $day <= 19)) {
-            return 'Aries';
+            return 'Овен';
         } elseif (($month == 4 && $day >= 20) || ($month == 5 && $day <= 20)) {
-            return 'Taurus';
+            return 'Телец';
         } elseif (($month == 5 && $day >= 21) || ($month == 6 && $day <= 20)) {
-            return 'Gemini';
+            return 'Близнецы';
         } elseif (($month == 6 && $day >= 21) || ($month == 7 && $day <= 22)) {
-            return 'Cancer';
+            return 'Рак';
         } elseif (($month == 7 && $day >= 23) || ($month == 8 && $day <= 22)) {
-            return 'Leo';
+            return 'Лев';
         } elseif (($month == 8 && $day >= 23) || ($month == 9 && $day <= 22)) {
-            return 'Virgo';
+            return 'Дева';
         } elseif (($month == 9 && $day >= 23) || ($month == 10 && $day <= 22)) {
-            return 'Libra';
+            return 'Весы';
         } elseif (($month == 10 && $day >= 23) || ($month == 11 && $day <= 21)) {
-            return 'Scorpio';
+            return 'Скорпион';
         } elseif (($month == 11 && $day >= 22) || ($month == 12 && $day <= 21)) {
-            return 'Sagittarius';
+            return 'Стрелец';
         } elseif (($month == 12 && $day >= 22) || ($month == 1 && $day <= 19)) {
-            return 'Capricorn';
+            return 'Козерог';
         } elseif (($month == 1 && $day >= 20) || ($month == 2 && $day <= 18)) {
-            return 'Aquarius';
+            return 'Водолей';
         } else {
-            return 'Pisces';
+            return 'Рыбы';
         }
     }
 
-    /**
+        /**
      * Get Chinese zodiac based on year
      */
     private function getChineseZodiac(int $year): string
     {
         $zodiacs = [
-            'Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake',
-            'Horse', 'Goat', 'Monkey', 'Rooster', 'Dog', 'Pig'
+            'Крыса', 'Бык', 'Тигр', 'Кролик', 'Дракон', 'Змея',
+            'Лошадь', 'Коза', 'Обезьяна', 'Петух', 'Собака', 'Свинья'
         ];
 
         $index = ($year - 1900) % 12;
         return $zodiacs[$index];
+    }
+
+            /**
+     * Get Russian day of week
+     */
+    private function getRussianDayOfWeek(Carbon $date): string
+    {
+        $days = [
+            'Monday' => 'Понедельник',
+            'Tuesday' => 'Вторник',
+            'Wednesday' => 'Среда',
+            'Thursday' => 'Четверг',
+            'Friday' => 'Пятница',
+            'Saturday' => 'Суббота',
+            'Sunday' => 'Воскресенье'
+        ];
+
+        $englishDay = $date->format('l');
+        return $days[$englishDay] ?? $englishDay;
     }
 
     /**
@@ -121,23 +140,23 @@ class ZodiacService
         $phase = ($daysSinceNewMoon % 29.53) / 29.53;
 
         if ($phase < 0.0625) {
-            return 'New Moon';
+            return 'Новолуние';
         } elseif ($phase < 0.1875) {
-            return 'Waxing Crescent';
+            return 'Растущий серп';
         } elseif ($phase < 0.3125) {
-            return 'First Quarter';
+            return 'Первая четверть';
         } elseif ($phase < 0.4375) {
-            return 'Waxing Gibbous';
+            return 'Растущая луна';
         } elseif ($phase < 0.5625) {
-            return 'Full Moon';
+            return 'Полнолуние';
         } elseif ($phase < 0.6875) {
-            return 'Waning Gibbous';
+            return 'Убывающая луна';
         } elseif ($phase < 0.8125) {
-            return 'Last Quarter';
+            return 'Последняя четверть';
         } elseif ($phase < 0.9375) {
-            return 'Waning Crescent';
+            return 'Убывающий серп';
         } else {
-            return 'New Moon';
+            return 'Новолуние';
         }
     }
 }

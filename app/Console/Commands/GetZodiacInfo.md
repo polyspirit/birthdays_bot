@@ -48,10 +48,10 @@ php artisan zodiac:info "@johndoe"
 ```
 Zodiac Information:
 Date: 1990-07-20
-Zodiac Sign: Cancer
+Zodiac Sign: Рак
 
 Additional Information:
-Day of Week: Friday
-Chinese Zodiac: Horse
-Moon Phase: New Moon
+Day of Week: Пятница
+Chinese Zodiac: Лошадь
+Moon Phase: Новолуние
 ``` 
