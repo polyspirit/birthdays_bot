@@ -44,15 +44,15 @@ enum GreetingStyleEnum: string
     /**
      * Get callback data for the style
      */
-    public function getCallbackData(string $name, string $username): string
+    public function getCallbackData(int $birthdayId): string
     {
-        return 'style_' . $this->value . '_' . urlencode($name) . '_' . urlencode($username);
+        return 'style_' . $this->value . '_' . $birthdayId;
     }
 
     /**
      * Get all styles as array for keyboard
      */
-    public static function getAllStyles(string $name, string $username): array
+    public static function getAllStyles(int $birthdayId): array
     {
         $styles = self::cases();
         $keyboard = [];
@@ -62,7 +62,7 @@ enum GreetingStyleEnum: string
             $row = [
                 [
                     'text' => $styles[$i]->getDisplayName(),
-                    'callback_data' => $styles[$i]->getCallbackData($name, $username)
+                    'callback_data' => $styles[$i]->getCallbackData($birthdayId)
                 ]
             ];
 
@@ -70,7 +70,7 @@ enum GreetingStyleEnum: string
             if (isset($styles[$i + 1])) {
                 $row[] = [
                     'text' => $styles[$i + 1]->getDisplayName(),
-                    'callback_data' => $styles[$i + 1]->getCallbackData($name, $username)
+                    'callback_data' => $styles[$i + 1]->getCallbackData($birthdayId)
                 ];
             }
 
@@ -81,7 +81,7 @@ enum GreetingStyleEnum: string
         $keyboard[] = [
             [
                 'text' => '✏️ Свой стиль',
-                'callback_data' => 'style_custom_' . urlencode($name) . '_' . urlencode($username)
+                'callback_data' => 'style_custom_' . $birthdayId
             ]
         ];
 

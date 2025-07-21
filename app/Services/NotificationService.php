@@ -42,11 +42,11 @@ class NotificationService
                     [
                         [
                             'text' => '📨 Простое поздравление',
-                            'callback_data' => 'greet_simple_' . $birthday['user_id']
+                            'callback_data' => 'greet_simple_' . $birthday['id']
                         ],
                         [
                             'text' => '🤖 ИИ поздравление',
-                            'callback_data' => 'greet_ai_' . $birthday['user_id']
+                            'callback_data' => 'greet_ai_' . $birthday['id']
                         ]
                     ]
                 ];
@@ -110,6 +110,7 @@ class NotificationService
         return Birthday::join('telegram_users', 'birthdays.user_id', '=', 'telegram_users.user_id')
             ->whereRaw("DATE_FORMAT(birth_date, '%m-%d') = ?", [$today])
             ->select(
+                'birthdays.id',
                 'birthdays.name',
                 'birthdays.telegram_username',
                 'birthdays.birthday_chat_id',
