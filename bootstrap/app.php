@@ -7,8 +7,8 @@ use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ->dailyAt('07:00')
             ->timezone('UTC')
             ->appendOutputTo(storage_path('logs/cron.log'));
-        
+
         // Send birthday notifications at 8:00 PM GMT+4 (16:00 UTC)
         $schedule->command('birthday:send-notifications')
             ->dailyAt('16:00')

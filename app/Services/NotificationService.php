@@ -42,13 +42,11 @@ class NotificationService
                     [
                         [
                             'text' => '📨 Простое поздравление',
-                            'callback_data' => 'greet_simple_' . urlencode($birthday['name'])
-                                . '_' . urlencode($birthday['telegram_username'])
+                            'callback_data' => 'greet_simple_' . $birthday['user_id']
                         ],
                         [
                             'text' => '🤖 ИИ поздравление',
-                            'callback_data' => 'greet_ai_' . urlencode($birthday['name'])
-                                . '_' . urlencode($birthday['telegram_username'])
+                            'callback_data' => 'greet_ai_' . $birthday['user_id']
                         ]
                     ]
                 ];
@@ -116,7 +114,8 @@ class NotificationService
                 'birthdays.telegram_username',
                 'birthdays.birthday_chat_id',
                 'birthdays.birth_date',
-                'telegram_users.chat_id'
+                'telegram_users.chat_id',
+                'birthdays.user_id'
             )
             ->get()
             ->toArray();
