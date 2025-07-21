@@ -71,6 +71,22 @@ class WebhookHandlerService
             return;
         }
 
+        if ($text === '/check') {
+            $notificationService = new \App\Services\NotificationService($this->telegramBot);
+            $todayBirthdays = $notificationService->getTodaysBirthdays();
+            $tomorrowBirthdays = $notificationService->getTomorrowBirthdays();
+            $totalBirthdays = count($todayBirthdays) + count($tomorrowBirthdays);
+            if ($totalBirthdays === 0) {
+                $this->telegramBot->sendMessage(
+                    $chatId,
+                    'Сегодня-завтра никаких дней рождений! Можете проверить ближайшие с помощью команды /upcoming'
+                );
+            } else {
+                $notificationService->sendDailyBirthdayNotifications();
+            }
+            return;
+        }
+
         $state = $this->stateService->getState($userId);
 
         if ($state && $state['state'] === 'awaiting_name') {
@@ -226,7 +242,8 @@ class WebhookHandlerService
             . PHP_EOL . '/add — добавить именинника'
             . PHP_EOL . '/list — список и удаление'
             . PHP_EOL . '/upcoming — ближайшие дни рождения'
-            . PHP_EOL . '/info — информация о знаке зодиака');
+            . PHP_EOL . '/info — информация о знаке зодиака'
+            . PHP_EOL . '/check — проверить дни рождения сегодня и завтра');
     }
 
     private function handleCallbackQuery($callback): void
